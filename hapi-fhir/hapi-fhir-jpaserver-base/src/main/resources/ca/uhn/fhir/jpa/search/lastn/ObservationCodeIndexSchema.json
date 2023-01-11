@@ -1,0 +1,24 @@
+{
+	"mappings": {
+		"properties": {
+			"codeable_concept_id": {
+				"type": "keyword"
+			},
+			"codingcode": {
+				"type": "keyword"
+			},
+			"codingcode_system_hash": {
+				"type": "keyword"
+			},
+			"codingdisplay": {
+				"type": "keyword"
+			},
+			"codingsystem": {
+				"type": "keyword"
+			},
+			"text": {
+				"type": "keyword"
+			}
+		}
+	}
+}

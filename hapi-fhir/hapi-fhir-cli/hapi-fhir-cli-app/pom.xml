@@ -1,0 +1,125 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Note: HAPI projects use the "hapi-fhir" POM as their base to provide easy management. You do not need to use this in your own projects, so the "parent" tag 
+		and it's contents below may be removed if you are using this file as a basis for your own project. -->
+	<parent>
+		<groupId>ca.uhn.hapi.fhir</groupId>
+		<artifactId>hapi-fhir-cli</artifactId>
+		<version>6.1.0-IPS</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>hapi-fhir-cli-app</artifactId>
+	<packaging>jar</packaging>
+
+	<name>HAPI FHIR - Command Line Client - Application</name>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-cli-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-cli-jpaserver</artifactId>
+			<version>${project.version}</version>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-cli-jpaserver</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>classes</classifier>
+		</dependency>
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-testpage-overlay</artifactId>
+			<version>${project.version}</version>
+			<classifier>classes</classifier>
+		</dependency>
+
+		<!--
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojbc8g</artifactId>
+			<version>12.2.0.1</version>
+		</dependency>
+		-->
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>ca.uhn.hapi.fhir</groupId>
+									<artifactId>hapi-fhir-cli-jpaserver</artifactId>
+									<type>war</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>target/classes</outputDirectory>
+									<destFileName>hapi-fhir-cli-jpaserver.war</destFileName>
+								</artifactItem>
+							</artifactItems>
+							<!-- other configurations here -->
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<finalName>hapi-fhir-cli</finalName>
+							<artifactSet>
+							</artifactSet>
+							<transformers>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>ca.uhn.fhir.cli.App</mainClass>
+								</transformer>
+							</transformers>
+							<filters>
+								<filter>
+									<artifact>*</artifact>
+									<excludes>
+										<exclude>**/*.SF</exclude>
+										<exclude>**/*.RSA</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+        </plugins>
+	</build>
+
+</project>

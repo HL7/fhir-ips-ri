@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>ca.uhn.hapi.fhir</groupId>
+		<artifactId>hapi-fhir-spring-boot</artifactId>
+		<version>6.1.0-IPS</version>
+	</parent>
+
+	<artifactId>hapi-fhir-spring-boot-samples</artifactId>
+	<packaging>pom</packaging>
+
+	<modules>
+		<module>hapi-fhir-spring-boot-sample-client-apache</module>
+		<module>hapi-fhir-spring-boot-sample-client-okhttp</module>
+		<module>hapi-fhir-spring-boot-sample-server-jersey</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring_boot_version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+</project>

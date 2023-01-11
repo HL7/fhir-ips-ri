@@ -1,0 +1,830 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- one-liner to take you to the cloud with settings form the application.yaml file: -->
+    <!-- 'mvn clean package com.google.cloud.tools:jib-maven-plugin:dockerBuild -Dimage=distroless-hapi && docker run -p 8080:8080 -e spring.batch.job.enabled=false distroless-hapi' -->
+    <!--
+    Note: HAPI projects use the "hapi-fhir" POM as their base to provide easy management.
+    You do not need to use this in your own projects, so the "parent" tag and it's
+    contents below may be removed
+    if you are using this file as a basis for your own project.
+    --> 
+
+    <groupId>crossroads.labs</groupId>
+    <artifactId>hapi-fhir-jpaserver-starter</artifactId>
+    <packaging>war</packaging>
+    <version>6.1.0-IPS</version>
+
+    <properties>
+        <java.version>17.0.4</java.version>
+        <fhir_core_version>5.6.36</fhir_core_version>
+        <ucum_version>1.0.3</ucum_version>
+
+        <surefire_jvm_args>-Dfile.encoding=UTF-8 -Xmx2048m</surefire_jvm_args>
+
+        <!-- configure timestamp in MANIFEST.MF for maven-war-provider -->
+        <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Dependency Versions -->
+        <activation_api_version>1.2.0</activation_api_version>
+        <apache_karaf_version>4.2.5</apache_karaf_version>
+        <aries_spifly_version>1.2</aries_spifly_version>
+        <caffeine_version>2.9.1</caffeine_version>
+        <commons_codec_version>1.15</commons_codec_version>
+        <commons_compress_version>1.21</commons_compress_version>
+        <commons_text_version>1.9</commons_text_version>
+        <commons_io_version>2.11.0</commons_io_version>
+        <commons_lang3_version>3.12.0</commons_lang3_version>
+        <com_jamesmurty_utils_version>1.2</com_jamesmurty_utils_version>
+        <cql_version>1.5.0</cql_version>
+        <derby_version>10.14.2.0</derby_version>
+        <!--<derby_version>10.15.1.3</derby_version>-->
+        <error_prone_core_version>2.10.0</error_prone_core_version>
+        <mockito_version>4.2.0</mockito_version>
+        <nullaway_version>0.7.9</nullaway_version>
+        <guava_version>31.0.1-jre</guava_version>
+        <gson_version>2.8.9</gson_version>
+        <jaxb_bundle_version>2.2.11_1</jaxb_bundle_version>
+        <jaxb_api_version>2.3.1</jaxb_api_version>
+        <jaxb_core_version>2.3.0.1</jaxb_core_version>
+        <jaxb_runtime_version>3.0.0</jaxb_runtime_version>
+        <jena_version>4.2.0</jena_version>
+        <jersey_version>3.0.3</jersey_version>
+        <jetty_version>9.4.48.v20220622</jetty_version>
+        <jsr305_version>3.0.2</jsr305_version>
+        <junit_version>5.8.2</junit_version>
+        <flexmark_version>0.50.40</flexmark_version>
+        <flyway_version>8.5.0</flyway_version>
+        <hibernate_version>5.6.2.Final</hibernate_version>
+        <hibernate_search_version>6.1.4.Final</hibernate_search_version>
+        <!-- Update lucene version when you update hibernate-search version -->
+        <lucene_version>8.11.1</lucene_version>
+        <hamcrest_version>2.2</hamcrest_version>
+        <hibernate_validator_version>6.1.5.Final</hibernate_validator_version>
+        <httpcore_version>4.4.13</httpcore_version>
+        <httpclient_version>4.5.13</httpclient_version>
+        <jackson_version>2.13.2</jackson_version>
+        <jackson_databind_version>2.13.2.2</jackson_databind_version>
+        <maven_assembly_plugin_version>3.3.0</maven_assembly_plugin_version>
+        <maven_license_plugin_version>1.8</maven_license_plugin_version>
+        <okhttp_version>4.10.0</okhttp_version>
+        <poi_version>4.1.2</poi_version>
+        <poi_ooxml_schemas_version>1.4</poi_ooxml_schemas_version>
+        <resteasy_version>5.0.2.Final</resteasy_version>
+        <ph_schematron_version>5.6.5</ph_schematron_version>
+        <ph_commons_version>9.5.4</ph_commons_version>
+        <plexus_compiler_api_version>2.9.0</plexus_compiler_api_version>
+        <servicemix_saxon_version>9.8.0-15</servicemix_saxon_version>
+        <servicemix_xmlresolver_version>1.2_5</servicemix_xmlresolver_version>
+        <swagger_version>2.1.12</swagger_version>
+        <slf4j_version>1.7.33</slf4j_version>
+        <log4j_to_slf4j_version>2.17.1</log4j_to_slf4j_version>
+        <spring_version>5.3.20</spring_version>
+		  <spring_data_bom_version>2021.2.2</spring_data_bom_version>
+		  <spring_batch_version>4.3.3</spring_batch_version>
+        <spring_boot_version>2.6.7</spring_boot_version>
+        <spring_retry_version>1.2.2.RELEASE</spring_retry_version>
+
+        <stax2_api_version>3.1.4</stax2_api_version>
+        <testcontainers_version>1.17.1</testcontainers_version>
+        <thymeleaf-version>3.0.14.RELEASE</thymeleaf-version>
+        <woodstox_core_asl_version>4.4.1</woodstox_core_asl_version>
+
+        <!-- We are aiming to still work on a very old version of SLF4j even though we depend on the newest, just to be nice to users of the API. This version is tested in the hapi-fhir-cobertura. -->
+        <slf4j_target_version>1.6.0</slf4j_target_version>
+
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <ebay_cors_filter_version>1.0.1</ebay_cors_filter_version>
+
+        <elastic_apm_version>1.28.4</elastic_apm_version>
+        <!-- CQL Support -->
+        <cql-engine.version>1.5.1</cql-engine.version>
+        <cql-evaluator.version>1.2.0</cql-evaluator.version>
+        <cqframework.version>1.5.2</cqframework.version>
+
+        <!-- Site properties -->
+        <fontawesomeVersion>5.4.1</fontawesomeVersion>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+		  <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.testSource>17</maven.compiler.testSource>
+		  <maven.compiler.testTarget>17</maven.compiler.testTarget>
+		  <maven.compiler.testRelease>17</maven.compiler.testRelease>
+    </properties>
+
+    <prerequisites>
+        <maven>3.8.3</maven>
+    </prerequisites>
+
+    <name>HAPI FHIR JPA Server - Starter Project</name>
+
+    <repositories>
+		<repository>
+	      <id>project.local</id>
+        	<name>project</name>
+        	<url>file:${project.basedir}/repo</url>
+		</repository>
+        <repository>
+            <id>oss-snapshots</id>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-api</artifactId>
+            <version>${jetty_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-client</artifactId>
+            <version>${jetty_version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.4.1</version>
+        </dependency>
+
+        <!-- Needed for Email subscriptions -->
+        <dependency>
+            <groupId>org.simplejavamail</groupId>
+            <artifactId>simple-java-mail</artifactId>
+            <version>6.6.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>jakarta.annotation</groupId>
+                    <artifactId>jakarta.annotation-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- This dependency includes the core HAPI-FHIR classes -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-base</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- This dependency includes the EmailSenderImpl we will be using instead of standard javamail.-->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-jpaserver-subscription</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.zaxxer</groupId>
+                    <artifactId>HikariCP-java7</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- This dependency includes the JPA server itself, which is packaged separately from the rest of HAPI FHIR -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-jpaserver-base</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-jcl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- This dependency includes the JPA CQL Server -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-jpaserver-cql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- This dependency includes the JPA MDM Server -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-jpaserver-mdm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- This dependency includes the OpenAPI Server -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-server-openapi</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- This dependency is used for the "FHIR Tester" web app overlay -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-testpage-overlay</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-testpage-overlay</artifactId>
+            <version>${project.version}</version>
+            <classifier>classes</classifier>
+        </dependency>
+
+        <!-- HAPI-FHIR uses Logback for logging support. The logback library is included automatically by Maven as a part of the hapi-fhir-base dependency, but you also need to include a logging library. Logback
+            is used here, but log4j would also be fine. -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.10</version>
+        </dependency>
+
+        <!-- Needed for JEE/Servlet support -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+            <version>3.1.0</version>
+        </dependency>
+
+        <!-- If you are using HAPI narrative generation, you will need to include Thymeleaf as well. Otherwise the following can be omitted. -->
+        <dependency>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf</artifactId>
+            <version>${thymeleaf-version}</version>
+        </dependency>
+
+        <!-- Needed for parsing the config -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.30</version>
+        </dependency>
+
+        <!-- Used for CORS support -->
+        <!-- Spring Web is used to deploy the server to a web container. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring_version}</version>
+        </dependency>
+
+        <!-- You may not need this if you are deploying to an application server which provides database connection pools itself. -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-dbcp2</artifactId>
+            <version>2.9.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- This example uses H2 embedded database. If you are using another database such as Mysql or Oracle, you may omit the following dependencies and replace them with an appropriate database client
+            dependency for your database platform. 
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+-->
+        <!-- webjars -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>5.1.3</version>
+        </dependency>
+        <dependency>
+				<groupId>org.webjars</groupId>
+				<artifactId>Eonasdan-bootstrap-datetimepicker</artifactId>
+				<version>4.17.47</version>
+				<exclusions>
+					<exclusion>
+						<groupId>*</groupId>
+						<artifactId>*</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.webjars</groupId>
+				<artifactId>font-awesome</artifactId>
+				<version>5.8.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.webjars.bower</groupId>
+				<artifactId>awesome-bootstrap-checkbox</artifactId>
+				<version>1.0.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.webjars</groupId>
+				<artifactId>jstimezonedetect</artifactId>
+				<version>1.0.6</version>
+			</dependency>
+			<dependency>
+				<groupId>org.webjars</groupId>
+				<artifactId>select2</artifactId>
+				<version>4.0.13</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.webjars</groupId>
+						<artifactId>jquery</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.webjars.bower</groupId>
+				<artifactId>jquery</artifactId>
+				<version>3.5.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.webjars.bower</groupId>
+				<artifactId>moment</artifactId>
+				<version>2.27.0</version>
+			</dependency>
+
+        <!-- The following dependencies are only needed for automated unit tests, you do not neccesarily need them to run the example. -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-server</artifactId>
+            <version>${jetty_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+            <version>${jetty_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>${jetty_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>${testcontainers_version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers_version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+        <!--
+        For some reason JavaDoc crashed during site generation unless we have this dependency
+        -->
+        <dependency>
+            <groupId>javax.interceptor</groupId>
+            <artifactId>javax.interceptor-api</artifactId>
+            <version>1.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-test-utilities</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>4.1.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>${spring_boot_version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${spring_boot_version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>1.8.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.0.1</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.7.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.7.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring_boot_version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <executions>
+                    <execution>
+                    <id>copy-dependencies</id>
+                    <phase>package</phase>
+                    <goals><goal>copy-dependencies</goal></goals>
+                    <configuration>
+                        <includeScope>compile</includeScope>
+                    </configuration>
+                    </execution>
+                </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <!-- Tells Maven to name the generated WAR file as ROOT.war -->
+        <finalName>ROOT</finalName>
+
+        <plugins>
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${jetty_version}</version>
+            </plugin>
+            <plugin>
+                <groupId>com.heroku.sdk</groupId>
+                <artifactId>heroku-maven-plugin</artifactId>
+                <version>3.0.4</version>
+                <configuration>
+                    <includeTarget>false</includeTarget>
+                    <includes>
+                        <include>target/ROOT.war</include>
+                        <include>*.war</include>
+                    </includes>
+                </configuration>              
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring_boot_version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>ca.uhn.fhir.jpa.starter.Application</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- The following is not required for the application to build, but allows you to test it by issuing "mvn package jetty:run -Dspring.batch.job.enabled=false" from the command line. -->
+            <!--
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${jetty_version}</version>
+                <configuration>
+                    <webApp>
+                        <contextPath>/hapi-fhir-jpaserver</contextPath>
+                        <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
+                    </webApp>
+                </configuration>
+            </plugin>
+            -->
+
+            <!-- Tell Maven which Java source version you want to use -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <release>17</release>
+                </configuration>
+            </plugin>
+
+            <!-- The configuration here tells the WAR plugin to include the FHIR Tester overlay. You can omit it if you are not using that feature. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.2.3</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Build-Time>${maven.build.timestamp}</Build-Time>
+                        </manifestEntries>
+                    </archive>
+                    <attachClasses>true</attachClasses>
+                    <overlays>
+                        <overlay>
+                            <groupId>ca.uhn.hapi.fhir</groupId>
+                            <artifactId>hapi-fhir-testpage-overlay</artifactId>
+                        </overlay>
+                    </overlays>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+
+            <!-- This is to run the integration tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M5</version>
+                <configuration>
+                    <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.basepom.maven</groupId>
+                <artifactId>duplicate-finder-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <inherited>true</inherited>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failBuildInCaseOfConflict>false</failBuildInCaseOfConflict>
+                    <checkTestClasspath>false</checkTestClasspath>
+                    <!--
+                    <printEqualFiles>false</printEqualFiles>
+                    <failBuildInCaseOfDifferentContentConflict>true</failBuildInCaseOfDifferentContentConflict>
+                    <failBuildInCaseOfEqualContentConflict>true</failBuildInCaseOfEqualContentConflict>
+                    <failBuildInCaseOfConflict>true</failBuildInCaseOfConflict>
+                    <checkCompileClasspath>true</checkCompileClasspath>
+                    <checkRuntimeClasspath>false</checkRuntimeClasspath>
+                    <skip>false</skip>
+                    <quiet>false</quiet>
+                    <preferLocal>true</preferLocal>
+                    <useResultFile>true</useResultFile>
+                    <resultFileMinClasspathCount>2</resultFileMinClasspathCount>
+                    <resultFile>${project.build.directory}/duplicate-finder-result.xml</resultFile>
+                    -->
+                    <!--
+                    <ignoredDependencies>
+                        <dependency>
+                            <groupId>javax.el</groupId>
+                            <artifactId>javax.el-api</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>javax.mail</groupId>
+                            <artifactId>javax.mail-api</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>javax.activation</groupId>
+                            <artifactId>javax.activation-api</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>com.helger</groupId>
+                            <artifactId>ph-schematron</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>commons-logging</groupId>
+                            <artifactId>commons-logging</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.jscience</groupId>
+                            <artifactId>jscience</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-jcl</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.springframework</groupId>
+                            <artifactId>spring-jcl</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>com.google.code.findbugs</groupId>
+                            <artifactId>annotations</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.apache.derby</groupId>
+                            <artifactId>derbyclient</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.apache.derby</groupId>
+                            <artifactId>derbynet</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.apache.derby</groupId>
+                            <artifactId>derbyclient</artifactId>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.checkerframework</groupId>
+                            <artifactId>checker-compat-qual</artifactId>
+                        </dependency>
+                    </ignoredDependencies>
+                    -->
+                    <ignoredResourcePatterns>
+                        <ignoredResourcePattern>.*\.txt$</ignoredResourcePattern>
+                        <ignoredResourcePattern>.*\.html$</ignoredResourcePattern>
+                        <ignoredResourcePattern>config/favicon.ico</ignoredResourcePattern>
+                    </ignoredResourcePatterns>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                    <id>clean-jar-artifacts</id>
+                    <phase>install</phase>
+                    <goals><goal>clean</goal></goals>
+                    <configuration>
+                        <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                        <filesets>
+                        <!-- <fileset>
+                            <directory>target/dependency/*.jar</directory>
+                        </fileset> -->
+                        <fileset>
+                            <directory>target</directory>
+                            <excludes>
+                                <exclude>*.war</exclude>
+                            </excludes>
+                        </fileset>
+                        <fileset>
+                            <directory>repo</directory>
+                        </fileset>
+                        </filesets>
+                    </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Package the war for your preference. Use the boot profile if you prefer a single jar/war
+        that can be started with and embedded application server. Default is jetty as it is assumed
+        that the main users of this project already have an app server.
+        Different profiles are needed as packing it for spring boot, makes the resulting war undeployable
+        due to a class shading issue between tomcat and jetty.
+        (the error is 'java.util.ServiceConfigurationError: org.apache.juli.logging.Log: org.eclipse.jetty.apache.jsp.JuliLog not a subtype')
+
+         -->
+
+        <!-- example of how to start the server using spring boot-->
+        <!-- mvn clean package spring-boot:repackage -Pboot && java -jar target/hapi-fhir-jpaserver.war -->
+
+        <!-- Use the boot profile for development and debugging options when using your IDE -->
+        <profile>
+            <id>boot</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                    <version>${spring_boot_version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <!-- examples of how to start the server using the default profile-->
+        <!-- mvn clean package jetty:run -Dspring.batch.job.enabled=false -->
+        <!-- java -jar -Dspring.batch.job.enabled=false jetty-runner.jar target/hapi-fhir-jpaserver.war -->
+        <profile>
+            <id>jetty</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                    <version>${spring_boot_version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-starter-tomcat</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>ossrh-repo</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <property>
+                    <name>deployToSonatype</name>
+                </property>
+            </activation>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>${gpg.keyname}</keyname>
+                                    <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
